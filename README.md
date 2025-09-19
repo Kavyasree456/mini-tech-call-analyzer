@@ -12,6 +12,7 @@ The app can:
 ## Features
 - Simple web interface built with **Flask** and **Bootstrap**.
 - Input a transcript in a text area and click **Analyze**.
+- Displays results in a clean web UI (Bootstrap + colored badges)
 - Displays the latest analysis and keeps a history of the last 5 transcripts.
 - Automatically appends results to a CSV file for later reference.
 
