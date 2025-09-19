@@ -42,41 +42,50 @@ HTML_TEMPLATE = """
           <p><b>Transcript:</b> {{ transcript }}</p>
           <p><b>Summary:</b> {{ summary }}</p>
           <p><b>Sentiment:</b>
-            {% if sentiment == "Positive" %}
-              <span class="badge bg-success">{{ sentiment }}</span>
-            {% elif sentiment == "Negative" %}
-              <span class="badge bg-danger">{{ sentiment }}</span>
-            {% else %}
-              <span class="badge bg-secondary">{{ sentiment }}</span>
-            {% endif %}
-          </p>
+  {% if sentiment == "Positive" %}
+    <span class="badge text-bg-success">{{ sentiment }}</span>
+  {% elif sentiment == "Negative" %}
+    <span class="badge text-bg-danger">{{ sentiment }}</span>
+  {% else %}
+    <span class="badge text-bg-secondary">{{ sentiment }}</span>
+  {% endif %}
+</p>
+
+
         </div>
       </div>
       {% endif %}
 
       <h4>📊 Previous Analyses (Last 5)</h4>
-      <table class="table table-striped table-bordered">
-        <thead class="table-dark">
-          <tr><th>Transcript</th><th>Summary</th><th>Sentiment</th></tr>
-        </thead>
-        <tbody>
-        {% for row in history %}
-          <tr>
-            <td>{{ row[0] }}</td>
-            <td>{{ row[1] }}</td>
-            <td>
-              {% if row[2] == "Positive" %}
-                <span class="badge bg-success">{{ row[2] }}</span>
-              {% elif row[2] == "Negative" %}
-                <span class="badge bg-danger">{{ row[2] }}</span>
-              {% else %}
-                <span class="badge bg-secondary">{{ row[2] }}</span>
-              {% endif %}
-            </td>
-          </tr>
-        {% endfor %}
-        </tbody>
-      </table>
+<table class="table table-striped table-bordered">
+  <thead class="table-dark">
+    <tr><th>Transcript</th><th>Summary</th><th>Sentiment</th></tr>
+  </thead>
+  <tbody>
+  {% for row in history %}
+    <tr>
+      <td>{{ row[0] }}</td>
+      <td>{{ row[1] }}</td>
+      <td>
+  {% if row[2] == "Positive" %}
+    <span class="badge text-bg-success">{{ row[2] }}</span>
+  {% elif row[2] == "Negative" %}
+    <span class="badge text-bg-danger">{{ row[2] }}</span>
+  {% else %}
+    <span class="badge text-bg-secondary">{{ row[2] }}</span>
+  {% endif %}
+</td>
+
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+
+
+
+
+          
     </div>
   </body>
 </html>
@@ -86,7 +95,7 @@ HTML_TEMPLATE = """
 # Function to get summary and sentiment
 # -------------------------------
 def analyze_transcript(text):
-    # Generate a short summary (strictly about the transcript, no extra sentences)
+    # Generate a short summary
     summary_prompt = f"Summarize this customer call in 2-3 sentences only about the transcript. Do NOT add extra information or polite follow-ups:\n{text}"
     summary = client.chat.completions.create(
         model="llama-3.1-8b-instant",
@@ -104,10 +113,17 @@ def analyze_transcript(text):
         messages=[{"role": "user", "content": sentiment_prompt}]
     ).choices[0].message.content.strip()
 
-    # Keep only first word (in case model adds explanation)
-    sentiment = sentiment_resp.split()[0]
+    # Normalize sentiment
+    sentiment_clean = sentiment_resp.lower().strip().replace(".", "")
+    if "pos" in sentiment_clean:
+        sentiment = "Positive"
+    elif "neg" in sentiment_clean:
+        sentiment = "Negative"
+    else:
+        sentiment = "Neutral"
 
     return summary, sentiment
+
 
 # -------------------------------
 # Flask routes
